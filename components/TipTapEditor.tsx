@@ -32,22 +32,45 @@ interface TipTapEditorProps {
 export default function TipTapEditor({ content, onChange }: TipTapEditorProps) {
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        // Disable heading in StarterKit as we'll add our own
+        heading: false,
+        // Make sure these are enabled and properly configured
+        bulletList: true,
+        orderedList: true,
+        code: true,
+        codeBlock: true,
+      }),
       Heading.configure({
         levels: [1, 2, 3],
+        HTMLAttributes: {
+          class: "font-bold",
+        },
       }),
       Link.configure({
         openOnClick: false,
+        HTMLAttributes: {
+          class: "text-primary underline cursor-pointer",
+        },
       }),
       Image,
       Placeholder.configure({
-        placeholder: "Write something...",
+        placeholder: "Write your content here...",
+        emptyEditorClass: "is-editor-empty",
       }),
     ],
     content,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML())
     },
+    // Fix SSR hydration mismatch
+    editorProps: {
+      attributes: {
+        class: "prose prose-lg focus:outline-none max-w-none",
+      },
+    },
+    // Fix SSR hydration mismatch
+    immediatelyRender: false,
   })
 
   if (!editor) {
@@ -61,7 +84,16 @@ export default function TipTapEditor({ content, onChange }: TipTapEditorProps) {
   }
 
   const setLink = (url: string) => {
-    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run()
+    if (url) {
+      // First check if text is selected
+      if (editor.state.selection.empty) {
+        // If no text is selected, insert the URL as a link
+        editor.chain().focus().insertContent(`<a href="${url}">${url}</a>`).run()
+      } else {
+        // If text is selected, convert it to a link
+        editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run()
+      }
+    }
   }
 
   const removeLink = () => {
@@ -69,8 +101,8 @@ export default function TipTapEditor({ content, onChange }: TipTapEditorProps) {
   }
 
   return (
-    <div className="border-none">
-      <div className="flex flex-wrap gap-1 p-2 bg-muted/50 border-b">
+    <div className="overflow-hidden rounded-md border">
+      <div className="flex flex-wrap gap-1 p-2 bg-muted/50 border-b sticky top-0 z-10">
         <Button
           variant="ghost"
           size="sm"
@@ -161,23 +193,31 @@ export default function TipTapEditor({ content, onChange }: TipTapEditorProps) {
           type="button"
           onClick={(e) => {
             e.preventDefault()
+            editor.chain().focus().toggleCode().run()
+          }}
+          className={editor.isActive("code") ? "bg-muted" : ""}
+        >
+          <Code className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          type="button"
+          onClick={(e) => {
+            e.preventDefault()
             editor.chain().focus().toggleCodeBlock().run()
           }}
           className={editor.isActive("codeBlock") ? "bg-muted" : ""}
         >
-          <Code className="h-4 w-4" />
+          <Code className="h-4 w-4 mr-1" />
+          Block
         </Button>
         <LinkDialog
           initialUrl={editor.getAttributes("link").href || ""}
           onConfirm={setLink}
           onRemove={removeLink}
           trigger={
-            <Button
-              variant="ghost"
-              size="sm"
-              type="button"
-              className={editor.isActive("link") ? "bg-muted" : ""}
-            >
+            <Button variant="ghost" size="sm" type="button" className={editor.isActive("link") ? "bg-muted" : ""}>
               <LinkIcon className="h-4 w-4" />
             </Button>
           }
@@ -185,11 +225,7 @@ export default function TipTapEditor({ content, onChange }: TipTapEditorProps) {
         <ImageUploadDialog
           onImageUploaded={addImage}
           trigger={
-            <Button
-              variant="ghost"
-              size="sm"
-              type="button"
-            >
+            <Button variant="ghost" size="sm" type="button">
               <ImageIcon className="h-4 w-4" />
             </Button>
           }
@@ -219,7 +255,64 @@ export default function TipTapEditor({ content, onChange }: TipTapEditorProps) {
           <Redo className="h-4 w-4" />
         </Button>
       </div>
-      <EditorContent editor={editor} className="p-4 min-h-[200px] prose prose-sm max-w-none" />
+      <style jsx global>{`
+        .ProseMirror {
+          min-height: 300px;
+          padding: 1rem;
+        }
+        .ProseMirror p.is-editor-empty:first-child::before {
+          content: attr(data-placeholder);
+          float: left;
+          color: #adb5bd;
+          pointer-events: none;
+          height: 0;
+        }
+        .ProseMirror:focus {
+          outline: none;
+        }
+        .ProseMirror h1 {
+          font-size: 2em;
+          font-weight: bold;
+          margin-top: 0.67em;
+          margin-bottom: 0.67em;
+        }
+        .ProseMirror h2 {
+          font-size: 1.5em;
+          font-weight: bold;
+          margin-top: 0.83em;
+          margin-bottom: 0.83em;
+        }
+        .ProseMirror h3 {
+          font-size: 1.17em;
+          font-weight: bold;
+          margin-top: 1em;
+          margin-bottom: 1em;
+        }
+        .ProseMirror ul {
+          list-style-type: disc;
+          padding-left: 1.5em;
+          margin: 1em 0;
+        }
+        .ProseMirror ol {
+          list-style-type: decimal;
+          padding-left: 1.5em;
+          margin: 1em 0;
+        }
+        .ProseMirror a {
+          color: #0000EE;
+          text-decoration: underline;
+        }
+        .ProseMirror code {
+          background-color: rgba(97, 97, 97, 0.1);
+          border-radius: 3px;
+          padding: 0.2em 0.4em;
+          font-family: monospace;
+        }
+      `}</style>
+      <EditorContent
+        editor={editor}
+        className="prose prose-sm sm:prose-base lg:prose-lg max-w-none bg-background focus-within:ring-0 focus-within:outline-none"
+      />
     </div>
   )
 }

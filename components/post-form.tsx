@@ -15,7 +15,7 @@ import FeaturedImageUpload from "./FeaturedImageUpload"
 import TagsInput from "./TagsInput"
 import { postSchema, type PostFormValues } from "@/lib/schemas/post"
 import { createPost, updatePost } from "@/lib/actions/posts"
-import { Loader2 } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface PostFormProps {
   initialData?: any
@@ -146,9 +146,7 @@ export default function PostForm({ initialData, postId }: PostFormProps) {
             <FormItem>
               <FormLabel>Content</FormLabel>
               <FormControl>
-                <div className="border rounded-md overflow-hidden">
-                  <TipTapEditor content={field.value} onChange={field.onChange} />
-                </div>
+                <TipTapEditor content={field.value} onChange={field.onChange} />
               </FormControl>
               <FormDescription>
                 Write your post content using the rich text editor (minimum 50 characters)
@@ -199,10 +197,7 @@ export default function PostForm({ initialData, postId }: PostFormProps) {
           </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {postId ? "Updating..." : "Creating..."}
-              </>
+              <LoadingSpinner size="sm" text={postId ? "Updating..." : "Creating..."} className="justify-start" />
             ) : postId ? (
               "Update Post"
             ) : (

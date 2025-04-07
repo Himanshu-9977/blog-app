@@ -1,7 +1,22 @@
+"use client"
+
+import { useState } from "react"
 import Link from "next/link"
-import { Facebook, Twitter, Instagram, Github } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Facebook, Twitter, Instagram, Github, Search } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
 export default function Footer() {
+  const [searchQuery, setSearchQuery] = useState("")
+  const router = useRouter()
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/blog?search=${encodeURIComponent(searchQuery.trim())}`)
+    }
+  }
   return (
     <footer className="border-t bg-muted/30">
       <div className="container px-4 py-12 md:py-16">
@@ -56,29 +71,25 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h3 className="text-lg font-bold mb-4">Categories</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/blog/category/technology" className="text-muted-foreground hover:text-primary">
-                  Technology
-                </Link>
-              </li>
-              <li>
-                <Link href="/blog/category/lifestyle" className="text-muted-foreground hover:text-primary">
-                  Lifestyle
-                </Link>
-              </li>
-              <li>
-                <Link href="/blog/category/business" className="text-muted-foreground hover:text-primary">
-                  Business
-                </Link>
-              </li>
-              <li>
-                <Link href="/blog/category/health" className="text-muted-foreground hover:text-primary">
-                  Health & Wellness
-                </Link>
-              </li>
-            </ul>
+            <h3 className="text-lg font-bold mb-4">Search Posts</h3>
+            <form onSubmit={handleSearch} className="space-y-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search articles..."
+                  className="pl-8 bg-background/50"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <Button type="submit" size="sm" className="w-full">
+                Search
+              </Button>
+            </form>
+            <div className="mt-4 text-sm text-muted-foreground">
+              <p>Find articles by keyword or browse by tags on our blog page.</p>
+            </div>
           </div>
           <div>
             <h3 className="text-lg font-bold mb-4">Legal</h3>

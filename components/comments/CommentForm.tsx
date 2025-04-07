@@ -3,7 +3,7 @@
 import { useState, useRef, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@clerk/nextjs"
-import { Loader2 } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -100,10 +100,7 @@ export default function CommentForm({
       <div className="flex justify-end">
         <Button type="submit" disabled={isPending || !content.trim()}>
           {isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Posting...
-            </>
+            <LoadingSpinner size="sm" text="Posting..." className="justify-start" />
           ) : (
             buttonText
           )}

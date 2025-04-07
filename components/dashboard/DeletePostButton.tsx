@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { Trash2 } from "lucide-react"
+import { Trash2, Loader2 } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
@@ -29,7 +30,7 @@ export default function DeletePostButton({ postId, postTitle }: DeletePostButton
   const handleDelete = () => {
     startTransition(async () => {
       const result = await deletePost(postId)
-      
+
       if (result.error) {
         toast.error(result.error)
       } else {
@@ -58,7 +59,7 @@ export default function DeletePostButton({ postId, postTitle }: DeletePostButton
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-          <AlertDialogAction 
+          <AlertDialogAction
             onClick={(e) => {
               e.preventDefault()
               handleDelete()
@@ -66,7 +67,7 @@ export default function DeletePostButton({ postId, postTitle }: DeletePostButton
             disabled={isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isPending ? "Deleting..." : "Delete"}
+            {isPending ? <LoadingSpinner size="sm" text="Deleting..." /> : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -37,9 +37,7 @@ export default async function HomePage() {
                 <Button asChild size="lg" className="rounded-full px-8">
                   <Link href="/blog">Explore Articles</Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="rounded-full px-8">
-                  <Link href="/sign-up">Join the Community</Link>
-                </Button>
+                
                 <TagSearch popularTags={popularTags} />
               </div>
             </div>

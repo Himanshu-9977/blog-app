@@ -1,39 +1,32 @@
 "use client"
-
-import { useState, useRef } from "react"
-import { LinkIcon } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog"
+import { useState, type ReactNode } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 interface LinkDialogProps {
+  trigger: ReactNode
   initialUrl: string
   onConfirm: (url: string) => void
-  onRemove: () => void
-  trigger: React.ReactNode
+  onRemove?: () => void
 }
 
-export default function LinkDialog({ initialUrl, onConfirm, onRemove, trigger }: LinkDialogProps) {
-  const [url, setUrl] = useState(initialUrl || "")
+export default function LinkDialog({ trigger, initialUrl, onConfirm, onRemove }: LinkDialogProps) {
   const [open, setOpen] = useState(false)
-  const dialogCloseRef = useRef<HTMLButtonElement>(null)
+  const [url, setUrl] = useState(initialUrl)
 
-  const handleConfirm = (e: React.FormEvent) => {
+  const handleConfirm = (e: React.MouseEvent) => {
     e.preventDefault()
-    
-    if (url.trim() === "") {
+    onConfirm(url)
+    setOpen(false)
+  }
+
+  const handleRemove = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (onRemove) {
       onRemove()
-    } else {
-      // Add https:// if no protocol is specified
-      let finalUrl = url
-      if (finalUrl && !finalUrl.match(/^https?:\/\//i)) {
-        finalUrl = `https://${finalUrl}`
-      }
-      
-      onConfirm(finalUrl)
     }
-    
     setOpen(false)
   }
 
@@ -44,40 +37,36 @@ export default function LinkDialog({ initialUrl, onConfirm, onRemove, trigger }:
         <DialogHeader>
           <DialogTitle>Insert Link</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleConfirm} className="space-y-4">
-          <div className="space-y-2">
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
             <Label htmlFor="url">URL</Label>
             <Input
               id="url"
+              placeholder="https://example.com"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com"
-              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  handleConfirm(e as unknown as React.MouseEvent)
+                }
+              }}
             />
           </div>
-          <div className="flex justify-between">
-            {initialUrl && (
-              <Button 
-                type="button" 
-                variant="destructive" 
-                onClick={() => {
-                  onRemove()
-                  setOpen(false)
-                }}
-              >
-                Remove Link
-              </Button>
-            )}
-            <div className="flex gap-2 ml-auto">
-              <DialogClose ref={dialogCloseRef} asChild>
-                <Button variant="outline" type="button">Cancel</Button>
-              </DialogClose>
-              <Button type="submit">
-                {initialUrl ? "Update" : "Insert"}
-              </Button>
-            </div>
+        </div>
+        <div className="flex justify-between">
+          {initialUrl && onRemove && (
+            <Button type="button" variant="destructive" onClick={handleRemove}>
+              Remove Link
+            </Button>
+          )}
+          <div className="flex gap-2 ml-auto">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleConfirm}>Save</Button>
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   )
