@@ -2,18 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server"
 import { revalidatePath } from "next/cache"
-import path from "path"
-import fs from "fs"
-// Generate a random ID for filenames
-function generateId() {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-}
-
-// Ensure upload directory exists
-const uploadDir = path.join(process.cwd(), "public", "uploads")
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true })
-}
+import { optimizeAndStoreImage } from "@/lib/utils/image-utils"
 
 export async function uploadImage(formData: FormData) {
   const { userId } = await auth()
@@ -39,23 +28,17 @@ export async function uploadImage(formData: FormData) {
       return { error: "File too large. Maximum size is 5MB." }
     }
 
-    // Get the original file name to extract extension
-    let originalName = "image"
+    // Get the original file name
+    let originalName = "image.jpg"
     if ('name' in file) {
       originalName = file.name
     }
 
-    // Generate unique filename
-    const fileExt = originalName.split(".").pop() || "jpg"
-    const fileName = `${generateId()}.${fileExt}`
-    const filePath = path.join(uploadDir, fileName)
-
-    // Convert File to Buffer and save
+    // Convert File to Buffer
     const buffer = Buffer.from(await file.arrayBuffer())
-    fs.writeFileSync(filePath, buffer)
 
-    // Return the URL to the uploaded file
-    const fileUrl = `/uploads/${fileName}`
+    // Optimize and store the image
+    const fileUrl = await optimizeAndStoreImage(buffer, originalName, file.type)
 
     return { success: true, url: fileUrl }
   } catch (error) {
